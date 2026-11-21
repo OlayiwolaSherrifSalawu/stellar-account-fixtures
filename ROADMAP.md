@@ -36,9 +36,9 @@ empty gap list is gate G2.
 |---|---|---|---|---|
 | 0 | Ground truth | 5 | 6 | 83% |
 | 1 | Repository wrapper | 10 | 10 | 100% |
-| 2 | Coverage | 18 | 21 | 86% |
+| 2 | Coverage | 19 | 22 | 86% |
 | 3 | Consumer contract | 3 | 4 | 75% |
-| **All phases** | **Readiness total** | **36** | **41** | **88%** |
+| **All phases** | **Readiness total** | **37** | **42** | **88%** |
 | Gates | G1 to G5 | 2 | 5 | 40% |
 <!-- PROGRESS:END -->
 
@@ -147,6 +147,7 @@ python3 scripts/roadmap_progress.py --check ROADMAP.md
 - [x] **2.19** Prove a seed-shaped response leaves no fixture directory in `tests/test_capture_seed_no_dir.py`. S. Deps: 0.4. Done when: a response containing an `S...` seed pattern raises `Refused` with the seed refusal text, exits 2 through `main`, and creates no fixture or corpus directory on disk. **Issue:** #93. (done 2026-11-20 19:24: added `tests/test_capture_seed_no_dir.py`, which feeds `capture()` a seed-shaped body built at run time and asserts the refusal and an untouched root directory.)
 - [x] **2.20** Assert `tools/capture.py` imports only the standard library in `tests/test_capture_stdlib_imports.py`. S. Deps: 0.4. Done when: `ast` analysis of every import in `tools/capture.py` resolves each top-level name against `sys.stdlib_module_names` and the local modules, and a specimen with an external import is reported. **Issue:** #94. (done 2026-11-20 19:24: added `tests/test_capture_stdlib_imports.py`, which reads `tools/capture.py` with `ast` without importing it and names any non-standard dependency (D-02).)
 - [x] **2.21** Report the offending line when a sidecar fails to parse, covered in `tests/test_schema_parse_line.py`. S. Deps: 0.4. Done when: `load_manifest` reports `line N, column M` after the `sidecar is not valid TOML` prefix, and the new tests cover several parse failures. **Issue:** #96. (done 2026-11-20 19:24: added `describe_toml_error` in `validate.py`, which reads the position from the `tomllib` message so it reads the same on every supported Python, and `tests/test_schema_parse_line.py`.)
+- [x] **2.22** Cover malformed corpus root documents in `tests/test_validate_root_malformed.py`. M. Deps: 2.9. Done when: an empty file, a JSON array or scalar, invalid UTF-8 bytes and a directory standing where `corpus/root-<network>.json` should be each come back from `validate()` as one structured `corpus/root-<network>.json:` problem with no traceback, for both networks. **Issue:** #75. (done 2026-11-21 21:24: added `tests/test_validate_root_malformed.py`, sixteen byte cases plus the directory case run against a scratch copy of the shipped corpus and through `main()`. The four listed cases were already handled; the matrix found that a deeply nested root document raised `RecursionError` out of `check_root` on Python 3.11 and 3.12, so `check_root` now reports it as `not JSON: nested too deeply to parse`.)
 
 ### Phase 3: Consumer contract
 

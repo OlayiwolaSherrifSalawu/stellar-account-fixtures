@@ -59,6 +59,10 @@ TIMESTAMP_SHAPE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$")
 SHA_SHAPE = re.compile(r"^[0-9a-f]{64}$")
 ALLOWED_FILES = {"account.json", "fixture.toml"}
 MISSING_ROOT = "missing; every network used must have its root document"
+# json and tomllib parse nested arrays by recursion, so a deep enough document raises
+# RecursionError rather than ValueError on some Pythons. It is still a file that does not
+# parse, and it is reported as one instead of escaping validate() as a traceback.
+TOO_DEEP = "nested too deeply to parse"
 STRKEY_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"
 VERSION_ACCOUNT = 6 << 3
 VERSION_SEED = 18 << 3
@@ -417,6 +421,9 @@ def check_root(corpus: Corpus, networks: set[str]) -> None:
             root = json.loads(path.read_text(encoding="utf-8"))
         except ValueError as exc:
             corpus.error(f"corpus/root-{network}.json", f"not JSON: {exc}")
+            continue
+        except RecursionError:
+            corpus.error(f"corpus/root-{network}.json", f"not JSON: {TOO_DEEP}")
             continue
         if not isinstance(root, dict):
             corpus.error(f"corpus/root-{network}.json", "not a JSON object")
