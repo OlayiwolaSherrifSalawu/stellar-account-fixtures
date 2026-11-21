@@ -36,9 +36,9 @@ empty gap list is gate G2.
 |---|---|---|---|---|
 | 0 | Ground truth | 5 | 6 | 83% |
 | 1 | Repository wrapper | 10 | 10 | 100% |
-| 2 | Coverage | 20 | 23 | 87% |
+| 2 | Coverage | 21 | 24 | 88% |
 | 3 | Consumer contract | 3 | 4 | 75% |
-| **All phases** | **Readiness total** | **38** | **43** | **88%** |
+| **All phases** | **Readiness total** | **39** | **44** | **89%** |
 | Gates | G1 to G5 | 2 | 5 | 40% |
 <!-- PROGRESS:END -->
 
@@ -149,6 +149,7 @@ python3 scripts/roadmap_progress.py --check ROADMAP.md
 - [x] **2.21** Report the offending line when a sidecar fails to parse, covered in `tests/test_schema_parse_line.py`. S. Deps: 0.4. Done when: `load_manifest` reports `line N, column M` after the `sidecar is not valid TOML` prefix, and the new tests cover several parse failures. **Issue:** #96. (done 2026-11-20 19:24: added `describe_toml_error` in `validate.py`, which reads the position from the `tomllib` message so it reads the same on every supported Python, and `tests/test_schema_parse_line.py`.)
 - [x] **2.22** Cover malformed corpus root documents in `tests/test_validate_root_malformed.py`. M. Deps: 2.9. Done when: an empty file, a JSON array or scalar, invalid UTF-8 bytes and a directory standing where `corpus/root-<network>.json` should be each come back from `validate()` as one structured `corpus/root-<network>.json:` problem with no traceback, for both networks. **Issue:** #75. (done 2026-11-21 21:24: added `tests/test_validate_root_malformed.py`, sixteen byte cases plus the directory case run against a scratch copy of the shipped corpus and through `main()`. The four listed cases were already handled; the matrix found that a deeply nested root document raised `RecursionError` out of `check_root` on Python 3.11 and 3.12, so `check_root` now reports it as `not JSON: nested too deeply to parse`.)
 - [x] **2.23** Fuzz `fixture.toml` and `account.json` with malformed bytes in `tests/test_validate_fuzz_malformed.py`. L. Deps: 2.21, 2.22. Done when: a fuzzer seeded with a fixed value and built on the standard library corrupts both files of a shipped fixture with invalid UTF-8, truncation, JSON scalars and deeply nested brackets, every case returns structured `fixtures/<id>:` problems from `validate()` with no exception, and the suite runs deterministically under unittest discovery. **Issue:** #84. (done 2026-11-21 21:34: added `tests/test_validate_fuzz_malformed.py`, 230 cases from seed 20261121 across hostile bytes, invalid UTF-8, truncation, digit flips, scalar documents and deep nesting. The fuzzer found three escapes, now problems: deeply nested JSON or TOML raised `RecursionError` (reported as `is not JSON` or `is not valid TOML` with `nested too deeply to parse`), and a digit flip that made `captured_at` an impossible date raised `ValueError` from `strptime` (reported as `is not a real UTC date and time`).)
+- [x] **2.24** Pin the `fetch()` retry schedule in `tests/test_capture_retry_schedule.py` with an injected sleep. M. Deps: 0.4. Done when: with `time.sleep` and `OPENER.open` patched, transient 5xx and network failures sleep exactly 1.5, 3.0 and 4.5 seconds, a fourth attempt is never made and `RuntimeError` follows the third failure, and a 4xx raises `Refused` at once without sleeping or retrying. **Issue:** #88. (done 2026-11-21 21:41: added `tests/test_capture_retry_schedule.py`, eleven tests covering 5xx, `URLError`, `TimeoutError` and `OSError` exhaustion, 4xx codes 400 to 499 including 429, a 4xx after a retry, recovery after two failures, the per-attempt request and 15 second timeout, and the exit codes 1 and 2 through `main()`; no test opens a socket or waits on a clock. No change to `tools/capture.py`.)
 
 ### Phase 3: Consumer contract
 
