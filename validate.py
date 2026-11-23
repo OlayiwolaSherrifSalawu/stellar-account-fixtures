@@ -59,6 +59,13 @@ TIMESTAMP_SHAPE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$")
 SHA_SHAPE = re.compile(r"^[0-9a-f]{64}$")
 ALLOWED_FILES = {"account.json", "fixture.toml"}
 MISSING_ROOT = "missing; every network used must have its root document"
+AUTH_FLAGS = (
+    "auth_required",
+    "auth_revocable",
+    "auth_immutable",
+    "auth_clawback_enabled",
+)
+
 # json and tomllib parse nested arrays by recursion, so a deep enough document raises
 # RecursionError rather than ValueError on some Pythons. It is still a file that does not
 # parse, and it is reported as one instead of escaping validate() as a traceback.
@@ -182,7 +189,7 @@ def shapes_of(account: dict) -> set[str]:
     else:
         found.add("thresholds_zero")
     for flag, value in flags.items():
-        if value:
+        if value and flag in AUTH_FLAGS:
             found.add(str(flag))
     if home_domain is None:
         found.add("no_home_domain")
@@ -356,6 +363,8 @@ def check_captured(corpus: Corpus, where: str, data: dict, body: Path, account: 
     derived = shapes_of(account)
     for token in sorted(declared - derived):
         corpus.error(where, f"declared shape {token!r} is not what account.json shows")
+    for token in sorted(derived - declared):
+        corpus.error(where, f"account.json shows shape {token!r} which sidecar omits")
 
 
 def check_synthetic(corpus: Corpus, where: str, data: dict, account: dict) -> None:
@@ -363,6 +372,8 @@ def check_synthetic(corpus: Corpus, where: str, data: dict, account: dict) -> No
     derived = shapes_of(account)
     for token in sorted(declared - derived):
         corpus.error(where, f"declared shape {token!r} is not what account.json shows")
+    for token in sorted(derived - declared):
+        corpus.error(where, f"account.json shows shape {token!r} which sidecar omits")
 
 
 def validate_fixture(corpus: Corpus, directory: Path, seen_ids: dict[str, str]) -> None:
